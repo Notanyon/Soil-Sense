@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoilSense - Smart Farming Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #15803d 100%);
+            min-height: 100vh;
+            color: #1f2937;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #15803d;
+            letter-spacing: -1px;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.assistant {
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 75%;
+            padding: 1rem 1.25rem;
+            border-radius: 18px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-bubble {
+            background: #15803d;
+            color: white;
+        }
+
+        .message.assistant .message-bubble {
+            background: white;
+            color: #374151;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            max-width: 120px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #15803d;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1rem 1.25rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 24px;
+            font-size: 1rem;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            font-family: inherit;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #15803d;
+        }
+
+        .send-button {
+            background: #15803d;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
+        }
+
+        .send-button:hover:not(:disabled) {
+            background: #166534;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(21, 128, 61, 0.4);
+        }
+
+        .send-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .suggestions {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .suggestion-chip {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .suggestion-chip:hover {
+            background: #dcfce7;
+            border-color: #15803d;
+            transform: translateY(-1px);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-8px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+                gap: 1rem;
+            }
+            
+            .header {
+                padding: 1.5rem;
+            }
+            
+            .logo h1 {
+                font-size: 2rem;
+            }
+            
+            .chat-container {
+                height: 500px;
+                padding: 1.5rem;
+            }
+            
+            .suggestions {
+                gap: 0.5rem;
+            }
+            
+            .suggestion-chip {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Custom scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <h1>🌱 SoilSense</h1>
+            </div>
+            <p class="tagline">Your AI-powered farming companion for smart agriculture decisions</p>
+        </header>
+
+        <main class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="message-bubble">
+                        Hello! I'm SoilSense, your AI farming assistant. I can help you with soil analysis, crop recommendations, pest identification, and agricultural advice. What would you like to know?
+                    </div>
+                </div>
+            </div>
+
+            <div class="suggestions">
+                <button class="suggestion-chip" data-question="What crops grow best in sandy soil?">Sandy soil crops</button>
+                <button class="suggestion-chip" data-question="How to improve soil pH naturally?">Improve soil pH</button>
+                <button class="suggestion-chip" data-question="Signs of nitrogen deficiency in plants?">Nitrogen deficiency</button>
+                <button class="suggestion-chip" data-question="Best organic fertilizers for vegetables?">Organic fertilizers</button>
+            </div>
+
+            <div class="input-container">
+                <textarea 
+                    id="userInput" 
+                    class="chat-input" 
+                    placeholder="Ask me about farming, soil, crops..." 
+                    rows="1"
+                ></textarea>
+                <button id="sendBtn" class="send-button" disabled>
+                    ➤
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.21.0";
+
+        // Hardcoded API key
+        const API_KEY = "AIzaSyDR9qDai4D75TJOPuH5DLG0Z-Cl7Gvvxhk";
+
+        // DOM elements
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const suggestionChips = document.querySelectorAll('.suggestion-chip');
+
+        let genAI = null;
+        let model = null;
+        let isTyping = false;
+
+        // System prompt for farming expertise
+        const SYSTEM_PROMPT = `You are SoilSense, an expert agricultural AI assistant. Provide practical, science-based farming advice that's easy to understand. Focus on soil health, crop management, sustainable practices, pest control, and agricultural optimization. Keep responses concise but informative.`;
+
+        // Initialize AI
+        function initializeAI() {
+            try {
+                genAI = new GoogleGenerativeAI(API_KEY);
+                model = genAI.getGenerativeModel({ 
+                    model: "gemini-1.5-flash",
+                    systemInstruction: SYSTEM_PROMPT
+                });
+                sendBtn.disabled = false;
+                return true;
+            } catch (error) {
+                console.error('Error initializing AI:', error);
+                addMessage('Sorry, I\'m having trouble connecting. Please refresh the page and try again.');
+                return false;
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            sendBtn.addEventListener('click', sendMessage);
+            
+            userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            userInput.addEventListener('input', autoResize);
+
+            suggestionChips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const question = chip.dataset.question;
+                    userInput.value = question;
+                    autoResize();
+                    if (!sendBtn.disabled) {
+                        sendMessage();
+                    }
+                });
+            });
+        }
+
+        // Auto-resize textarea
+        function autoResize() {
+            userInput.style.height = 'auto';
+            userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+        }
+
+        // Add message to chat
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.textContent = content;
+            
+            messageDiv.appendChild(bubbleDiv);
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // Send message
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            
+            if (!message || isTyping || !model) return;
+
+            // Add user message
+            addMessage(message, true);
+            userInput.value = '';
+            autoResize();
+            
+            // Show typing and disable input
+            isTyping = true;
+            sendBtn.disabled = true;
+            showTypingIndicator();
+
+            try {
+                const result = await model.generateContent(message);
+                const response = await result.response;
+                const text = response.text();
+                
+                hideTypingIndicator();
+                addMessage(text);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                hideTypingIndicator();
+                
+                let errorMessage = 'Sorry, I encountered an issue. ';
+                if (error.message.includes('quota') || error.message.includes('limit')) {
+                    errorMessage += 'The service is currently busy. Please try again in a moment.';
+                } else {
+                    errorMessage += 'Please try again.';
+                }
+                
+                addMessage(errorMessage);
+            } finally {
+                isTyping = false;
+                sendBtn.disabled = false;
+            }
+        }
+
+        // Initialize everything
+        function init() {
+            initializeAI();
+            setupEventListeners();
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
