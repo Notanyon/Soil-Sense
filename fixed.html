@@ -1,503 +1,597 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SoilSense - Smart Farming Assistant</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soil Sense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:      #F7F3E7;
+    --panel:       #FFFFFF;
+    --soil-950:    #241B14;
+    --soil-700:    #6E4A30;
+    --moss-600:    #4F6B4E;
+    --moss-100:    #E4EBDE;
+    --wheat-200:   #EADFB9;
+    --amber-600:   #B8842E;
+    --line:        #E4DAC2;
+    --ink-soft:    #5B4E3C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--canvas);
+    color:var(--soil-950);
+    font-family:'IBM Plex Sans', -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    overflow:hidden;
+  }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #15803d 100%);
-            min-height: 100vh;
-            color: #1f2937;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 1rem;
-        }
+  /* ---------- top bar ---------- */
+  .topbar{
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:1rem 1.5rem;
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:.55rem;
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.1rem;
+    color:var(--soil-950);
+  }
+  .topbar-right{display:flex;align-items:center;gap:.7rem;}
+  .newchat-btn{
+    display:flex;
+    align-items:center;
+    gap:.4rem;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:.82rem;
+    font-weight:500;
+    padding:.45rem .8rem;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .12s ease, color .12s ease;
+  }
+  .newchat-btn:hover{background:var(--moss-100);color:var(--soil-950);}
+  .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.68rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    border:1px solid var(--line);
+    padding:.4rem .7rem;
+    border-radius:999px;
+    background:var(--panel);
+  }
 
-        .container {
-            max-width: 800px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            margin: 0 auto;
-        }
+  /* ---------- chat area ---------- */
+  .chat-scroll{
+    flex:1;
+    overflow-y:auto;
+    padding:2rem 1.5rem 1rem;
+  }
+  .chat-inner{
+    max-width:52rem;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:1.4rem;
+  }
 
-        .header {
-            text-align: center;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
+  /* empty state */
+  .empty-state{
+    max-width:34rem;
+    margin:3rem auto 0;
+    text-align:center;
+  }
+  .empty-state h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.9rem;
+    line-height:1.2;
+    margin:0 0 .6rem;
+    color:var(--soil-950);
+  }
+  .empty-state h1 em{font-style:italic;color:var(--amber-600);}
+  .empty-state p{
+    color:var(--ink-soft);
+    font-size:.98rem;
+    line-height:1.55;
+    margin:0 0 1.4rem;
+  }
+  .empty-examples{
+    display:flex;
+    gap:.5rem;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .chip{
+    background:var(--wheat-200);
+    border:1px solid #ddc898;
+    color:var(--soil-700);
+    padding:.4rem .85rem;
+    border-radius:999px;
+    font-size:.82rem;
+    font-weight:500;
+    cursor:pointer;
+    transition:background .12s ease;
+  }
+  .chip:hover{background:#e2d29c;}
 
-        .logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
+  /* message rows */
+  .msg-row{
+    display:flex;
+    align-items:flex-start;
+    gap:.65rem;
+  }
+  .msg-row.user{flex-direction:row-reverse;}
 
-        .logo h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #15803d;
-            letter-spacing: -1px;
-        }
+  .avatar{
+    flex-shrink:0;
+    width:30px;height:30px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.66rem;
+    font-weight:600;
+    letter-spacing:.02em;
+  }
+  .avatar.model{background:var(--moss-600);color:#F7F3E7;}
+  .avatar.user{background:var(--soil-950);color:#F7F3E7;}
 
-        .tagline {
-            font-size: 1.1rem;
-            color: #6b7280;
-            line-height: 1.5;
-        }
+  .bubble{
+    max-width:74%;
+    padding:.75rem 1rem;
+    border-radius:12px;
+    line-height:1.6;
+    font-size:.95rem;
+    white-space:pre-wrap;
+  }
+  .msg-row.user .bubble{
+    background:var(--soil-950);
+    color:#F7F3E7;
+    border-radius:12px 12px 3px 12px;
+  }
+  .msg-row.model .bubble{
+    background:var(--moss-100);
+    color:var(--soil-950);
+    border-left:3px solid var(--amber-600);
+    border-radius:3px 12px 12px 12px;
+  }
+  .msg-row.model .bubble.error{
+    background:#FBEDEA;
+    border-left:3px solid #B0432B;
+    color:#7A2E1C;
+  }
+  .msg-row.model .bubble .model-tag{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.66rem;
+    color:#8f7f66;
+    margin-top:.6rem;
+  }
+  .bubble p{margin:0 0 .7rem;}
+  .bubble p:last-child{margin-bottom:0;}
+  .bubble ul{margin:.2rem 0 .8rem;padding-left:1.2rem;}
+  .bubble ul li{margin-bottom:.35rem;}
+  .bubble ul li:last-child{margin-bottom:0;}
+  .bubble strong{font-weight:600;}
+  .bubble br{line-height:0;}
 
-        .chat-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            height: 600px;
-        }
+  .typing{
+    display:flex;
+    gap:.3rem;
+    align-items:center;
+    padding:.3rem 0;
+  }
+  .typing span{
+    width:6px;height:6px;
+    border-radius:50%;
+    background:var(--moss-600);
+    opacity:.5;
+    animation:blink 1.1s infinite ease-in-out;
+  }
+  .typing span:nth-child(2){animation-delay:.15s;}
+  .typing span:nth-child(3){animation-delay:.3s;}
+  @keyframes blink{0%,80%,100%{opacity:.3;}40%{opacity:1;}}
+  @media (prefers-reduced-motion: reduce){.typing span{animation:none;}}
 
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            background: #f8fafc;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-        }
+  /* ---------- composer, docked to bottom ---------- */
+  .composer-bar{
+    flex-shrink:0;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    padding:1rem 1.5rem 1.2rem;
+  }
+  .composer-inner{
+    max-width:52rem;
+    margin:0 auto;
+  }
+  .composer-row{
+    display:flex;
+    align-items:center;
+    gap:.7rem;
+    background:#FFFEFB;
+    border:1.5px solid var(--line);
+    border-radius:999px;
+    padding:.4rem .4rem .4rem 1.1rem;
+  }
+  .composer-row:focus-within{
+    border-color:var(--moss-600);
+    box-shadow:0 0 0 3px rgba(79,107,78,0.13);
+  }
+  .composer-row input{
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:.96rem;
+    color:var(--soil-950);
+    padding:.5rem 0;
+  }
+  .composer-row input::placeholder{color:#a99a80;}
+  .send-btn{
+    flex-shrink:0;
+    width:38px;height:38px;
+    border-radius:50%;
+    background:var(--soil-950);
+    color:#F7F3E7;
+    border:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:background .15s ease, transform .05s ease;
+  }
+  .send-btn:hover{background:var(--moss-600);}
+  .send-btn:active{transform:translateY(1px);}
+  .send-btn:disabled{background:#c7bda8;cursor:not-allowed;}
 
-        .message {
-            margin-bottom: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            animation: fadeIn 0.4s ease-out;
-        }
+  .composer-hint{
+    text-align:center;
+    font-size:.76rem;
+    color:#9a8a70;
+    margin-top:.6rem;
+  }
 
-        .message.user {
-            align-items: flex-end;
-        }
-
-        .message.assistant {
-            align-items: flex-start;
-        }
-
-        .message-bubble {
-            max-width: 75%;
-            padding: 1rem 1.25rem;
-            border-radius: 18px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        .message.user .message-bubble {
-            background: #15803d;
-            color: white;
-        }
-
-        .message.assistant .message-bubble {
-            background: white;
-            color: #374151;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem 1.25rem;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 18px;
-            max-width: 120px;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .typing-dots {
-            display: flex;
-            gap: 0.25rem;
-        }
-
-        .typing-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #15803d;
-            animation: typing 1.4s infinite ease-in-out;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        .input-container {
-            display: flex;
-            gap: 1rem;
-            align-items: flex-end;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 1rem 1.25rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 24px;
-            font-size: 1rem;
-            resize: none;
-            min-height: 50px;
-            max-height: 120px;
-            font-family: inherit;
-            background: white;
-            transition: border-color 0.3s ease;
-        }
-
-        .chat-input:focus {
-            outline: none;
-            border-color: #15803d;
-        }
-
-        .send-button {
-            background: #15803d;
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
-        }
-
-        .send-button:hover:not(:disabled) {
-            background: #166534;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(21, 128, 61, 0.4);
-        }
-
-        .send-button:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .suggestions {
-            display: flex;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .suggestion-chip {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #166534;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .suggestion-chip:hover {
-            background: #dcfce7;
-            border-color: #15803d;
-            transform: translateY(-1px);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes typing {
-            0%, 60%, 100% {
-                transform: translateY(0);
-            }
-            30% {
-                transform: translateY(-8px);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 0.5rem;
-                gap: 1rem;
-            }
-            
-            .header {
-                padding: 1.5rem;
-            }
-            
-            .logo h1 {
-                font-size: 2rem;
-            }
-            
-            .chat-container {
-                height: 500px;
-                padding: 1.5rem;
-            }
-            
-            .suggestions {
-                gap: 0.5rem;
-            }
-            
-            .suggestion-chip {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.8rem;
-            }
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Custom scrollbar */
-        .chat-messages::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .chat-messages::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 3px;
-        }
-
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-
-        .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-    </style>
+  @media (max-width: 640px){
+    .empty-state h1{font-size:1.5rem;}
+    .bubble{max-width:86%;}
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <div class="logo">
-                <h1>🌱 SoilSense</h1>
-            </div>
-            <p class="tagline">Your AI-powered farming companion for smart agriculture decisions</p>
-        </header>
 
-        <main class="chat-container">
-            <div class="chat-messages" id="chatMessages">
-                <div class="message assistant">
-                    <div class="message-bubble">
-                        Hello! I'm SoilSense, your AI farming assistant. I can help you with soil analysis, crop recommendations, pest identification, and agricultural advice. What would you like to know?
-                    </div>
-                </div>
-            </div>
+<div class="topbar">
+  <div class="brand">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M12 21C12 21 5 16.5 5 10.5C5 7 7.5 4 11 4C11.5 4 12 4.5 12 5V21Z" fill="#4F6B4E"/>
+      <path d="M12 21C12 21 19 16.5 19 10.5C19 7 16.5 4 13 4C12.5 4 12 4.5 12 5V21Z" fill="#6E4A30" fill-opacity="0.85"/>
+    </svg>
+    Soil Sense
+  </div>
+  <div class="topbar-right">
+    <button class="newchat-btn" id="newChatBtn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      New chat
+    </button>
+    <div class="tag">Field advisory · beta</div>
+  </div>
+</div>
 
-            <div class="suggestions">
-                <button class="suggestion-chip" data-question="What crops grow best in sandy soil?">Sandy soil crops</button>
-                <button class="suggestion-chip" data-question="How to improve soil pH naturally?">Improve soil pH</button>
-                <button class="suggestion-chip" data-question="Signs of nitrogen deficiency in plants?">Nitrogen deficiency</button>
-                <button class="suggestion-chip" data-question="Best organic fertilizers for vegetables?">Organic fertilizers</button>
-            </div>
-
-            <div class="input-container">
-                <textarea 
-                    id="userInput" 
-                    class="chat-input" 
-                    placeholder="Ask me about farming, soil, crops..." 
-                    rows="1"
-                ></textarea>
-                <button id="sendBtn" class="send-button" disabled>
-                    ➤
-                </button>
-            </div>
-        </main>
+<div class="chat-scroll" id="chatScroll">
+  <div class="chat-inner" id="chatInner">
+    <div class="empty-state" id="emptyState">
+      <h1>Field advice, <em>grounded</em> in science.</h1>
+      <p>Ask about your soil, crops, or field the way you'd ask a neighbor. Soil Sense remembers the conversation, so you can follow up without repeating yourself.</p>
+      <div class="empty-examples" id="examples">
+        <span class="chip" data-q="What vegetables grow well in clay soil during monsoon season?">Clay soil + monsoon</span>
+        <span class="chip" data-q="My tomato leaves are turning yellow from the bottom up. What could be wrong?">Yellowing leaves</span>
+        <span class="chip" data-q="When is the right time to sow wheat in North India?">Wheat sowing time</span>
+      </div>
     </div>
+  </div>
+</div>
 
-    <script type="module">
-        import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.21.0";
+<div class="composer-bar">
+  <div class="composer-inner">
+    <div class="composer-row">
+      <input type="text" id="question" placeholder="Ask Soil Sense anything about your field..." autocomplete="off">
+      <button class="send-btn" id="askBtn" aria-label="Send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M14 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="composer-hint">Answers are AI-generated — confirm major decisions with your local agriculture office.</div>
+  </div>
+</div>
 
-        // Hardcoded API key
-        const API_KEY = "AQ.Ab8RN6JGPIK1VYYTb8s70Yx2mncQ1DaILRiT3hP1v33Yo_FVWg";
+<script>
+  // ---------------------------------------------------------------
+  // CONFIG — hardcoded as requested.
+  // WARNING: this key will be visible to anyone who views page source
+  // or opens dev tools. Fine for local dev/demo; move behind a small
+  // backend before sharing this publicly, so the key never reaches
+  // the browser.
+  // ---------------------------------------------------------------
+  const GEMINI_API_KEY = "AQ.Ab8RN6LwOPtWxRdujaNrpYLUvg3V1tjD9FmXaEDcPKciojDKVw";
 
-        // DOM elements
-        const chatMessages = document.getElementById('chatMessages');
-        const userInput = document.getElementById('userInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const suggestionChips = document.querySelectorAll('.suggestion-chip');
+  // Tried in order. Only falls through to the next one on an actual
+  // failure (bad response / overloaded / unavailable) — not just
+  // because a "better" model exists.
+  const MODELS = [
+    "gemini-3.6-flash",      // best choice — tried first
+    "gemini-3.5-flash",
+    "gemini-flash-latest",
+    "gemini-3.1-flash-lite",
+  ];
 
-        let genAI = null;
-        let model = null;
-        let isTyping = false;
+  const SYSTEM_PROMPT = `You are Soil Sense, an assistant that gives small-scale farmers timely, science-based, practical agricultural advice.
+Rules:
+- Keep answers clear and plain-spoken, avoid unnecessary jargon; explain any technical term you must use.
+- Be specific and actionable: crops, timing, soil treatment, pest/disease steps.
+- If the question lacks details that matter (location, season, soil type), give the best general answer AND state what info would sharpen it.
+- If a question involves something risky (chemical pesticide dosing, large financial decisions), give safe general guidance and recommend confirming with a local agricultural extension office.
+- Keep responses focused — a few short paragraphs or a short list, not an essay.
+- Use the earlier conversation for context (e.g. "that field", "the same crop").`;
 
-        // System prompt for farming expertise
-        const SYSTEM_PROMPT = `You are SoilSense, an expert agricultural AI assistant. Provide practical, science-based farming advice that's easy to understand. Focus on soil health, crop management, sustainable practices, pest control, and agricultural optimization. Keep responses concise but informative.`;
+  // ---------------------------------------------------------------
+  // MEMORY — persisted to localStorage so it survives refreshes.
+  // Each entry: { role: "user"|"model", text: "...", model?: "..." }
+  // ---------------------------------------------------------------
+  const STORAGE_KEY = "soilsense_history_v1";
+  const MAX_TURNS_KEPT = 20; // user+model pairs
 
-        // Initialize AI
-        function initializeAI() {
-            try {
-                genAI = new GoogleGenerativeAI(API_KEY);
-                model = genAI.getGenerativeModel({ 
-                    model: "gemini-3.5-flash",
-                    systemInstruction: SYSTEM_PROMPT
-                });
-                sendBtn.disabled = false;
-                return true;
-            } catch (error) {
-                console.error('Error initializing AI:', error);
-                addMessage('Sorry, I\'m having trouble connecting. Please refresh the page and try again.');
-                return false;
-            }
-        }
+  function loadHistory(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e){ return []; }
+  }
+  function saveHistory(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); }
+    catch(e){ console.warn("Could not save conversation:", e); }
+  }
 
-        // Setup event listeners
-        function setupEventListeners() {
-            sendBtn.addEventListener('click', sendMessage);
-            
-            userInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
+  let history = loadHistory();
 
-            userInput.addEventListener('input', autoResize);
+  const chatScroll = document.getElementById('chatScroll');
+  const chatInner = document.getElementById('chatInner');
+  const emptyState = document.getElementById('emptyState');
+  const questionEl = document.getElementById('question');
+  const askBtn = document.getElementById('askBtn');
+  const newChatBtn = document.getElementById('newChatBtn');
 
-            suggestionChips.forEach(chip => {
-                chip.addEventListener('click', () => {
-                    const question = chip.dataset.question;
-                    userInput.value = question;
-                    autoResize();
-                    if (!sendBtn.disabled) {
-                        sendMessage();
-                    }
-                });
-            });
-        }
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      questionEl.value = chip.dataset.q;
+      questionEl.focus();
+    });
+  });
 
-        // Auto-resize textarea
-        function autoResize() {
-            userInput.style.height = 'auto';
-            userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
-        }
+  askBtn.addEventListener('click', sendMessage);
+  questionEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+  });
+  newChatBtn.addEventListener('click', () => {
+    history = [];
+    saveHistory();
+    chatInner.innerHTML = '';
+    chatInner.appendChild(emptyState);
+    emptyState.style.display = '';
+  });
 
-        // Add message to chat
-        function addMessage(content, isUser = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
-            
-            const bubbleDiv = document.createElement('div');
-            bubbleDiv.className = 'message-bubble';
-            bubbleDiv.textContent = content;
-            
-            messageDiv.appendChild(bubbleDiv);
-            chatMessages.appendChild(messageDiv);
-            
-            // Scroll to bottom
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+  function scrollToBottom(){
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+  }
 
-        // Show typing indicator
-        function showTypingIndicator() {
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'typing-indicator';
-            typingDiv.id = 'typingIndicator';
-            typingDiv.innerHTML = `
-                <div class="typing-dots">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
-            `;
-            chatMessages.appendChild(typingDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+  function hideEmptyState(){
+    if (emptyState.parentElement) emptyState.style.display = 'none';
+  }
 
-        // Hide typing indicator
-        function hideTypingIndicator() {
-            const typingIndicator = document.getElementById('typingIndicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
-        }
+  function escapeHtml(str){
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
 
-        // Send message
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            
-            if (!message || isTyping || !model) return;
+  // Minimal markdown -> HTML: bold, italics, bullet lists, paragraphs.
+  // Enough to render Gemini's typical formatting cleanly without
+  // pulling in a full markdown library.
+  function formatMarkdown(raw){
+    const escaped = escapeHtml(raw);
+    const lines = escaped.split(/\r?\n/);
 
-            // Add user message
-            addMessage(message, true);
-            userInput.value = '';
-            autoResize();
-            
-            // Show typing and disable input
-            isTyping = true;
-            sendBtn.disabled = true;
-            showTypingIndicator();
+    let html = '';
+    let inList = false;
 
-            try {
-                const result = await model.generateContent(message);
-                const response = await result.response;
-                const text = response.text();
-                
-                hideTypingIndicator();
-                addMessage(text);
-                
-            } catch (error) {
-                console.error('Error:', error);
-                hideTypingIndicator();
-                
-                let errorMessage = 'Sorry, I encountered an issue. ';
-                if (error.message.includes('quota') || error.message.includes('limit')) {
-                    errorMessage += 'The service is currently busy. Please try again in a moment.';
-                } else {
-                    errorMessage += 'Please try again.';
-                }
-                
-                addMessage(errorMessage);
-            } finally {
-                isTyping = false;
-                sendBtn.disabled = false;
-            }
-        }
+    const closeList = () => { if (inList){ html += '</ul>'; inList = false; } };
+    const inline = (s) => s
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/(^|[^*])\*(?!\*)([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
 
-        // Initialize everything
-        function init() {
-            initializeAI();
-            setupEventListeners();
-        }
+    for (const rawLine of lines){
+      const line = rawLine.trim();
 
-        // Start the app
-        init();
-    </script>
+      if (line === ''){
+        closeList();
+        html += '<br>';
+        continue;
+      }
+
+      const bulletMatch = line.match(/^[*\-]\s+(.*)/);
+      if (bulletMatch){
+        if (!inList){ html += '<ul>'; inList = true; }
+        html += `<li>${inline(bulletMatch[1])}</li>`;
+        continue;
+      }
+
+      closeList();
+      html += `<p>${inline(line)}</p>`;
+    }
+    closeList();
+    return html;
+  }
+
+  function addBubble(role, text, opts = {}){
+    hideEmptyState();
+    const row = document.createElement('div');
+    row.className = `msg-row ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = `avatar ${role}`;
+    avatar.textContent = role === 'user' ? 'You' : 'SS';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble' + (opts.error ? ' error' : '');
+    if (role === 'model'){
+      bubble.innerHTML = formatMarkdown(text);
+    } else {
+      bubble.textContent = text;
+    }
+
+    if (opts.model){
+      const tag = document.createElement('span');
+      tag.className = 'model-tag';
+      tag.textContent = `answered by ${opts.model}`;
+      bubble.appendChild(tag);
+    }
+
+    row.appendChild(bubble);
+    row.appendChild(avatar);
+    chatInner.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  function addTypingRow(){
+    hideEmptyState();
+    const row = document.createElement('div');
+    row.className = 'msg-row model';
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar model';
+    avatar.textContent = 'SS';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+    row.appendChild(bubble);
+    row.appendChild(avatar);
+    chatInner.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  function buildContents(newMessage){
+    const contents = history.map(turn => ({
+      role: turn.role,
+      parts: [{ text: turn.text }]
+    }));
+    contents.push({ role: "user", parts: [{ text: newMessage }] });
+    return contents;
+  }
+
+  async function callModel(modelName, contents){
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY
+      },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents
+      })
+    });
+    if (!response.ok){
+      const errBody = await response.text();
+      throw new Error(`(${response.status}) ${errBody}`);
+    }
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join("");
+    if (!text) throw new Error("Empty response from model.");
+    return text;
+  }
+
+  async function askWithFallback(newMessage){
+    const contents = buildContents(newMessage);
+    let lastErr = null;
+    for (const modelName of MODELS){
+      try{
+        const text = await callModel(modelName, contents);
+        return { text, model: modelName };
+      } catch(err){
+        lastErr = err;
+        console.warn(`Model ${modelName} failed, trying next...`, err.message);
+        continue;
+      }
+    }
+    throw new Error(`All models failed. Last error: ${lastErr?.message || lastErr}`);
+  }
+
+  async function sendMessage(){
+    const message = questionEl.value.trim();
+    if (!message) return;
+
+    if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE"){
+      addBubble('model', "No API key set yet — paste your Gemini API key into the GEMINI_API_KEY constant near the top of the script.", { error: true });
+      return;
+    }
+
+    addBubble('user', message);
+    questionEl.value = '';
+    askBtn.disabled = true;
+    const typingRow = addTypingRow();
+
+    try{
+      const { text, model } = await askWithFallback(message);
+
+      history.push({ role: "user", text: message });
+      history.push({ role: "model", text, model });
+      history = history.slice(-(MAX_TURNS_KEPT * 2));
+      saveHistory();
+
+      typingRow.remove();
+      addBubble('model', text, { model });
+    } catch(err){
+      console.error(err);
+      typingRow.remove();
+      addBubble('model', "Couldn't reach Soil Sense's AI right now — every available model failed or is overloaded. Check your API key, internet connection, or try again in a moment.", { error: true });
+    } finally {
+      askBtn.disabled = false;
+      questionEl.focus();
+    }
+  }
+
+  // restore any saved conversation
+  (function restore(){
+    if (!history.length) return;
+    chatInner.innerHTML = '';
+    for (const turn of history){
+      addBubble(turn.role, turn.text, turn.model ? { model: turn.model } : {});
+    }
+  })();
+</script>
+
 </body>
 </html>
